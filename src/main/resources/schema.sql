@@ -5,7 +5,8 @@ CREATE TABLE users
     username VARCHAR(50) UNIQUE NOT NULL,
     password_hash VARCHAR(255) NOT NULL,
     bio TEXT,
-    profile_picture_url VARCHAR(255)
+    profile_picture_url VARCHAR(255),
+    register_date DATETIME DEFAULT CURRENT_TIMESTAMP
 );
 
 -- Post Table
@@ -60,7 +61,7 @@ CREATE TABLE notifications
 (
     notification_id INT PRIMARY KEY AUTO_INCREMENT,
     user_id INT,
-    type VARCHAR(50),
+    message_type VARCHAR(50),
     message TEXT,
     related_user_id INT,
     is_read BOOLEAN DEFAULT false,

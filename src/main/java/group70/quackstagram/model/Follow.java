@@ -1,4 +1,6 @@
 package group70.quackstagram.model;
 
-public class Follow {
+import java.sql.Date;
+
+public record Follow(int follower_id, int followee_id, Date follow_date) {
 }

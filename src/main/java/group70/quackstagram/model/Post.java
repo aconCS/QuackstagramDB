@@ -1,4 +1,7 @@
 package group70.quackstagram.model;
 
-public record Post(String imagePath) {
-}
+import java.sql.Date;
+
+public record Post(int postID, int userID,
+                   String pictureURL, String description,
+                   Date postDate) {}

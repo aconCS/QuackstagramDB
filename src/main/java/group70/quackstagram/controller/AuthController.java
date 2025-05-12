@@ -1,5 +1,6 @@
 package group70.quackstagram.controller;
 
+import group70.quackstagram.model.User;
 import group70.quackstagram.services.AuthServices;
 
 public class AuthController {
@@ -10,7 +11,7 @@ public class AuthController {
         this.authServices = new AuthServices();
     }
 
-    public boolean verifyCredentials(String username, String password) {
+    public User verifyCredentials(String username, String password) {
         return authServices.verifyCredentials(username, password);
     }
 

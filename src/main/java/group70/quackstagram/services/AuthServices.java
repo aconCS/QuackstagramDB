@@ -1,5 +1,6 @@
 package group70.quackstagram.services;
 
+import group70.quackstagram.dao.UserDAO;
 import group70.quackstagram.model.User;
 
 import javax.imageio.ImageIO;
@@ -8,92 +9,49 @@ import java.io.*;
 
 public class AuthServices {
 
-    private static final String CREDENTIALS_FILE_PATH = "src/main/resources/data/credentials.txt";
+    private final UserDAO userDAO;
     private static final String PROFILE_PHOTO_STORAGE_PATH = "src/main/resources/img/storage/profile/";
 
-    /*
-    * Reads the credentials file and verifies the entered username and password.
-    * Creates a new User object with the entered username and bio upon successful verification.
-    * */
-    public boolean verifyCredentials(String username, String password) {
-        try (BufferedReader reader = new BufferedReader(new FileReader(CREDENTIALS_FILE_PATH))) {
-            String line;
-            while ((line = reader.readLine()) != null) {
-                String[] credentials = line.split(":");
-                if (credentials[0].equals(username) && credentials[1].equals(password)) {
-                    String bio = credentials[2];
-                    User newUser = new User(username, bio, password); // Assuming User constructor takes these parameters
-                    saveLoggedInUser(newUser);
-                    return true;
-                }
-            }
-        } catch (IOException e) {
-            e.printStackTrace();
-        }
-        return false;
+    public AuthServices(UserDAO userDAO) {
+        this.userDAO = userDAO;
     }
 
-    /*
-    * Reads the credentials file and checks if the entered username already exists.
-    * */
+    public User verifyCredentials(String username, String password) {
+        User user = userDAO.findUserByUsername(username);
+        if (user != null && user.passwordHash().equals(hashPassword(password))) {
+            return user;
+        }
+        return null;
+    }
+
     public boolean doesUsernameExist(String username) {
-        try (BufferedReader reader = new BufferedReader(new FileReader(CREDENTIALS_FILE_PATH))) {
-            String line;
-            while ((line = reader.readLine()) != null) {
-                if (line.startsWith(username + ":")) {
-                    return true;
-                }
-            }
-        } catch (IOException e) {
-            e.printStackTrace();
-        }
-        return false;
+        return userDAO.findUserByUsername(username) != null;
     }
 
-    /*
-    * Writes the entered username, password, and bio to the credentials file.
-    * */
-    public void saveCredentials(String username, String password, String bio) {
-        try (BufferedWriter writer = new BufferedWriter(new FileWriter(CREDENTIALS_FILE_PATH, true))) {
-            writer.write(username + ":" + password + ":" + bio);
-            writer.newLine();
-        } catch (IOException e) {
-            e.printStackTrace();
-        }
+    public User registerUser(String username, String password, String bio, String profilePictureUrl) {
+        String hashedPassword = hashPassword(password);
+        User newUser = new User(0, username, hashedPassword, bio, profilePictureUrl);
+        return userDAO.insertUser(newUser);
     }
 
-    /*
-    * Saves the profile picture of the user with the entered username once a non-null file is chosen.
-    * */
-    public boolean uploadProfilePicture(String username) {
-        FileServices fileServices = new FileServices();
-        File chosenFile = fileServices.openFileChooser("Upload Profile Picture", "jpg", "jpeg", "png");
-        if(chosenFile != null) {
-            saveProfilePicture(chosenFile, username);
-            return true;
-        }
-        return false;
-    }
+    public String uploadProfilePicture(File chosenFile, String username) {
+        if (chosenFile == null) return null;
 
-    /*
-     * Writes image to a file with the username as the filename.
-     * */
-    private void saveProfilePicture(File file, String username) {
         try {
-            BufferedImage image = ImageIO.read(file);
-            File outputFile = new File(PROFILE_PHOTO_STORAGE_PATH + username + ".png");
-            System.out.println(outputFile.getAbsolutePath());
+            BufferedImage image = ImageIO.read(chosenFile);
+            String outputPath = PROFILE_PHOTO_STORAGE_PATH + username + ".png";
+            File outputFile = new File(outputPath);
             ImageIO.write(image, "png", outputFile);
+            return outputPath;
         } catch (IOException e) {
             e.printStackTrace();
+            return null;
         }
     }
 
-    private void saveLoggedInUser(User user) {
-        try (BufferedWriter writer = new BufferedWriter(new FileWriter("src/main/resources/data/users.txt", false))) {
-            writer.write(user.toString());  // Implement a suitable toString method in User class
-        } catch (IOException e) {
-            e.printStackTrace();
-        }
+    // TODO: IMPLEMENT PASSWORD-HASHING FUNCTION
+    public String hashPassword(String password) {
+        return null;
     }
+
 }

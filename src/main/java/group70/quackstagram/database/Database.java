@@ -10,6 +10,8 @@ public class Database {
     private static final String PASSWORD = "password"; // MySQL password
     private static Connection connection = null;
 
+    public Database() {}
+
     // Get or create the database connection
     public static Connection getConnection() throws SQLException {
         if (connection == null || connection.isClosed()) {
