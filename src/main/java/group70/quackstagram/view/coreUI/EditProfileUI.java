@@ -24,11 +24,9 @@ public class EditProfileUI extends UIBase {
 
     /**
      * Constructor for EditProfileUI which creates the UI for editing the user's profile.
-     *
-     * @param userController The UserController instance that provides user-related functionalities.
      */
-    public EditProfileUI(UserController userController) {
-        this.userController = userController;
+    public EditProfileUI() {
+        this.userController = new UserController();
         setLayout( new BorderLayout());
 
         buildUI();
@@ -91,7 +89,7 @@ public class EditProfileUI extends UIBase {
             @Override
             public void mouseClicked(MouseEvent e) {
                 userController.changeProfilePicture(loggedInUser);
-                NavigationController.getInstance().navigate(EditProfileUI.this, new ProfileUI(loggedInUser));
+                NavigationController.getInstance().navigate(EditProfileUI.this, new ProfileUI(loggedInUser.getUsername()));
             }
         });
 
@@ -144,7 +142,7 @@ public class EditProfileUI extends UIBase {
             @Override
             public void actionPerformed(ActionEvent ae) {
                 userController.editBio(loggedInUser, bioField.getText());
-                NavigationController.getInstance().navigate(EditProfileUI.this, new ProfileUI(loggedInUser));
+                NavigationController.getInstance().navigate(EditProfileUI.this, new ProfileUI(loggedInUser.getUsername()));
             }
         });
         return bioField;

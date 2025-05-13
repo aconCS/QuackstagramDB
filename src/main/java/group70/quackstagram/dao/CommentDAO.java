@@ -14,7 +14,7 @@ public class CommentDAO {
 
     public void insertComment(Comment comment) throws SQLException {
         String sql = "INSERT INTO comments " +
-                "(post_id, owner, content) " +
+                "(post_id, commenter, content) " +
                 "VALUES (?, ?, ?)";
 
         try (Connection connection = Database.getConnection();
@@ -41,7 +41,7 @@ public class CommentDAO {
                 Comment comment = new Comment(
                         rs.getInt("comment_id"),
                         rs.getInt("post_id"),
-                        rs.getString("owner"),
+                        rs.getString("commenter"),
                         rs.getString("content"),
                         rs.getTimestamp("comment_date")
                 );

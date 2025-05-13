@@ -29,8 +29,10 @@ public class UserController {
 
     public void changeProfilePicture(User user){
         String pictureURL = FileServices.fileChooser("Choose profile picture", "png", "jpg");
-        user.setProfilePictureURL(pictureURL);
-        userServices.updateUser(user);
+        if(pictureURL != null){
+            user.setProfilePictureURL(pictureURL);
+            userServices.updateUser(user);
+        }
     }
 
     public void editBio(User user, String bio){

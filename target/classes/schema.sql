@@ -1,3 +1,7 @@
+CREATE DATABASE IF NOT EXISTS quackstagram;
+
+USE quackstagram;
+
 -- User Table
 CREATE TABLE users
 (
@@ -12,11 +16,11 @@ CREATE TABLE users
 CREATE TABLE posts
 (
     post_id INT PRIMARY KEY AUTO_INCREMENT,
-    owner VARCHAR(50),
+    poster VARCHAR(50),
     picture_url VARCHAR(255),
     description TEXT,
     post_date DATETIME DEFAULT CURRENT_TIMESTAMP,
-    FOREIGN KEY (owner) REFERENCES users(username)
+    FOREIGN KEY (poster) REFERENCES users(username)
 );
 
 -- Comment Table
@@ -24,11 +28,11 @@ CREATE TABLE comments
 (
     comment_id INT PRIMARY KEY AUTO_INCREMENT,
     post_id INT,
-    owner VARCHAR(50),
+    commenter VARCHAR(50),
     content TEXT,
     comment_date DATETIME DEFAULT CURRENT_TIMESTAMP,
     FOREIGN KEY (post_id) REFERENCES posts(post_id),
-    FOREIGN KEY (owner) REFERENCES users(username)
+    FOREIGN KEY (commenter) REFERENCES users(username)
 );
 
 -- Likes Table
@@ -57,14 +61,14 @@ CREATE TABLE follows (
 CREATE TABLE notifications
 (
     notification_id INT PRIMARY KEY AUTO_INCREMENT,
-    owner VARCHAR(50),
+    notified_username VARCHAR(50),
     type VARCHAR(50),
     message VARCHAR(256),
-    related_username VARCHAR(50),
+    notifier_username VARCHAR(50),
     is_read BOOLEAN DEFAULT false,
     date DATETIME,
-    FOREIGN KEY (owner) REFERENCES users(username),
-    FOREIGN KEY (related_username) REFERENCES users(username)
+    FOREIGN KEY (notified_username) REFERENCES users(username),
+    FOREIGN KEY (notifier_username) REFERENCES users(username)
 );
 
 -- MOCK DATA INSERTION IN mock_data.sql (LLM GENERATED)

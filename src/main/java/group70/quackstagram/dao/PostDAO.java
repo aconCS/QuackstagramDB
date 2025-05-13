@@ -12,7 +12,7 @@ public class PostDAO {
     public PostDAO() {}
 
     public Post createPost(Post post) throws SQLException {
-        String sql = "INSERT INTO posts (owner, picture_url, description) VALUES (?, ?, ?)";
+        String sql = "INSERT INTO posts (poster, picture_url, description) VALUES (?, ?, ?)";
         try (Connection conn = Database.getConnection();
              PreparedStatement stmt = conn.prepareStatement(sql, Statement.RETURN_GENERATED_KEYS)) {
 
@@ -41,8 +41,8 @@ public class PostDAO {
     public List<Post> getFilteredPosts(String filter, boolean exactMatch) throws SQLException {
         List<Post> posts = new ArrayList<>();
         String sql = exactMatch
-                ? "SELECT * FROM posts WHERE owner = ? ORDER BY post_date DESC"
-                : "SELECT * FROM posts WHERE owner LIKE ? ORDER BY post_date DESC";
+                ? "SELECT * FROM posts WHERE poster = ? ORDER BY post_date DESC"
+                : "SELECT * FROM posts WHERE poster LIKE ? ORDER BY post_date DESC";
         String likeSql = exactMatch
                 ? "SELECT COUNT(*) AS like_count FROM likes WHERE post_id = ?"
                 : "SELECT COUNT(*) AS like_count FROM likes WHERE post_id LIKE ?";
@@ -64,7 +64,7 @@ public class PostDAO {
 
                 Post post = new Post(
                         rs.getInt("post_id"),
-                        rs.getString("owner"),
+                        rs.getString("poster"),
                         rs.getString("picture_url"),
                         rs.getString("description"),
                         rs.getTimestamp("post_date"),
@@ -77,7 +77,7 @@ public class PostDAO {
     }
 
     public int countPostsByUser(String username) throws SQLException {
-        String sql = "SELECT COUNT(*) FROM posts WHERE owner = ?";
+        String sql = "SELECT COUNT(*) FROM posts WHERE poster = ?";
         try (Connection conn = Database.getConnection();
                 PreparedStatement stmt = conn.prepareStatement(sql)) {
             stmt.setString(1, username);
@@ -90,7 +90,7 @@ public class PostDAO {
     }
 
     public int getNextPostId(String username) throws SQLException {
-        String sql = "SELECT MAX(post_id) FROM posts WHERE owner = ?";
+        String sql = "SELECT MAX(post_id) FROM posts WHERE poster = ?";
         try (Connection conn = Database.getConnection();
              PreparedStatement stmt = conn.prepareStatement(sql)) {
 
@@ -128,7 +128,7 @@ public class PostDAO {
 
                 return new Post(
                         rs.getInt("post_id"),
-                        rs.getString("owner"),
+                        rs.getString("poster"),
                         rs.getString("picture_url"),
                         rs.getString("description"),
                         rs.getTimestamp("post_date"),

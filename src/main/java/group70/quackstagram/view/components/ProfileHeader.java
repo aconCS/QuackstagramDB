@@ -38,22 +38,8 @@ public class ProfileHeader extends JPanel {
     }
 
     public void refresh() {
-        UserProfileData userProfileData = userController.getUserProfileData(username);
-
-
         statsPanel.removeAll();
-        statsPanel.add(createStatLabel(Integer.toString(userProfileData.postCount()), "Posts"));
-        statsPanel.add(createStatLabel(Integer.toString(userProfileData.followerCount()), "Followers"));
-        statsPanel.add(createStatLabel(Integer.toString(userProfileData.followingCount()), "Following"));
-        profileBio.setText(userProfileData.bio());
-        statsPanel.revalidate();
-        statsPanel.repaint();
-
-        statsFollowPanel.remove(profileButton);
-        profileButton = createProfileButton();
-        statsFollowPanel.add(profileButton);
-        statsFollowPanel.revalidate();
-        statsFollowPanel.repaint();
+        buildHeaderPanel();
 
         revalidate();
         repaint();
@@ -147,7 +133,7 @@ public class ProfileHeader extends JPanel {
             profileButton.setText("Edit Profile");
             profileButton.addActionListener(e -> {
                 JFrame currFrame = (JFrame) SwingUtilities.getWindowAncestor(this);
-                NavigationController.getInstance().navigate(currFrame, new EditProfileUI(userController));
+                NavigationController.getInstance().navigate(currFrame, new EditProfileUI());
             });
         }
 

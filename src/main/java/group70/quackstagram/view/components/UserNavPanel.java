@@ -40,7 +40,7 @@ public class UserNavPanel extends JPanel {
             @Override
             public void mouseClicked(MouseEvent e) {
                 JFrame currFrame = (JFrame) SwingUtilities.getWindowAncestor(UserNavPanel.this);
-                NavigationController.getInstance().navigate(currFrame, new ProfileUI(user));
+                NavigationController.getInstance().navigate(currFrame, new ProfileUI(user.getUsername()));
             }
         });
 

@@ -16,6 +16,8 @@ public class UserDAO {
                 PreparedStatement stmt = conn.prepareStatement(sql)) {
             stmt.setString(1, user.getBio());
             stmt.setString(2, user.getProfilePictureURL());
+            stmt.setString(3, user.getUsername());
+            stmt.executeUpdate();
         }
     }
 

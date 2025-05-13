@@ -12,15 +12,15 @@ public class ProfileUI extends UIBase {
     private final int imageSize = width / 3;
 
     private final UserController userController;
-    private final User user;
+    private final String username;
 
     /**
     * Constructor for ProfileUI which creates the profile page for the given user.
     *
-    * @param user The owner of the user whose profile is to be displayed.
+    * @param username The owner of the user whose profile is to be displayed.
     * */
-    public ProfileUI(User user) {
-        this.user = user;
+    public ProfileUI(String username) {
+        this.username = username;
         setTitle("DACS Profile");
 
         // Initialize the user controller which will provide information belonging
@@ -41,10 +41,10 @@ public class ProfileUI extends UIBase {
     private void buildUI() {
         getContentPane().removeAll();
 
-        add(new ProfileHeader(user.getUsername(),userController), BorderLayout.NORTH);
+        add(new ProfileHeader(username,userController), BorderLayout.NORTH);
         add(new NavigationPanel(this), BorderLayout.SOUTH);
 
-        ImageGrid imageGridPanel = new ImageGrid(user.getUsername(), imageSize, true);
+        ImageGrid imageGridPanel = new ImageGrid(username, imageSize, true);
         add(imageGridPanel, BorderLayout.CENTER);
     }
 

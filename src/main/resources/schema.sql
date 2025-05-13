@@ -1,3 +1,7 @@
+CREATE DATABASE IF NOT EXISTS quackstagram;
+
+USE quackstagram;
+
 -- User Table
 CREATE TABLE users
 (

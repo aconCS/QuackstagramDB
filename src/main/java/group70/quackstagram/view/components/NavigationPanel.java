@@ -70,7 +70,7 @@ public class NavigationPanel extends JPanel {
     * */
     private void openProfileUI() {
         // Navigate to profile UI
-        NavigationController.getInstance().navigate(currFrame, new ProfileUI(Session.getInstance().getCurrentUser()));
+        NavigationController.getInstance().navigate(currFrame, new ProfileUI(Session.getInstance().getCurrentUser().getUsername()));
     }
 
     private void openImageUploadUI() { NavigationController.getInstance().navigate(currFrame, new ImageUploadUI()); }
