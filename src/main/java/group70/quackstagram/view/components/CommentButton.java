@@ -1,7 +1,11 @@
 package group70.quackstagram.view.components;
 
+import group70.quackstagram.Session;
 import group70.quackstagram.controller.NavigationController;
 import group70.quackstagram.controller.PostController;
+import group70.quackstagram.model.Comment;
+import group70.quackstagram.model.Post;
+import group70.quackstagram.model.User;
 import group70.quackstagram.view.coreUI.PostUI;
 
 import javax.swing.*;
@@ -14,14 +18,16 @@ public class CommentButton extends JPanel {
     private final PostController postController;
     private final boolean navigateToPost;
     private final CommentPanel commentPanel;
+    private final Post post;
 
-    public CommentButton(PostController postController, CommentPanel commentPanel, boolean navigateToPost){
+    public CommentButton(Post post, CommentPanel commentPanel, boolean navigateToPost){
         setLayout(new BoxLayout(this, BoxLayout.X_AXIS));
         setAlignmentX(Component.LEFT_ALIGNMENT);
 
-        this.postController = postController;
+        this.post = post;
         this.navigateToPost = navigateToPost;
         this.commentPanel = commentPanel;
+        this.postController = new PostController();
         buildCommentButton();
     }
 
@@ -35,7 +41,7 @@ public class CommentButton extends JPanel {
     }
 
     private void buildCommentButton() {
-        JLabel commentLabel = new JLabel(postController.getCommentsForPost().size() + " comments");
+        JLabel commentLabel = new JLabel(postController.getComments(post.getPostId()).size() + " comments");
         commentLabel.setBorder(BorderFactory.createEmptyBorder(5, 5, 5, 5));
         commentLabel.setFont(new Font("Arial", Font.PLAIN, 12));
 
@@ -59,7 +65,7 @@ public class CommentButton extends JPanel {
 
     private void handlePostNavigation(){
         JFrame currFrame = (JFrame) SwingUtilities.getWindowAncestor(this);
-        NavigationController.getInstance().navigate(currFrame, new PostUI(postController));
+        NavigationController.getInstance().navigate(currFrame, new PostUI(post));
     }
 
     private void handleCommentAction() {
@@ -86,9 +92,11 @@ public class CommentButton extends JPanel {
         submitButton.addActionListener(new ActionListener() {
             @Override
             public void actionPerformed(ActionEvent e) {
-                String comment = commentField.getText();
-                if (!comment.isEmpty()) {
-                    postController.addCommentToPost(comment);
+                String content = commentField.getText();
+                if (!content.isEmpty()) {
+                    User loggedInUser = Session.getInstance().getCurrentUser();
+                    Comment comment = new Comment(post.getPostId(), loggedInUser.getUsername(), content);
+                    postController.addComment(comment);
                     commentPanel.refreshCommentsPanel();
                     commentDialog.dispose();
                     refresh();

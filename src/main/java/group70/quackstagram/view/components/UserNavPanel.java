@@ -1,6 +1,9 @@
 package group70.quackstagram.view.components;
 
 import group70.quackstagram.controller.NavigationController;
+import group70.quackstagram.controller.UserController;
+import group70.quackstagram.model.User;
+import group70.quackstagram.model.UserProfileData;
 import group70.quackstagram.view.coreUI.ProfileUI;
 
 import javax.swing.*;
@@ -10,22 +13,25 @@ import java.awt.event.MouseEvent;
 
 public class UserNavPanel extends JPanel {
 
-    private final String imageOwner;
+    private final UserController userController;
+    private final User user;
 
-    public UserNavPanel(String imageOwner) {
-        this.imageOwner = imageOwner;
+    public UserNavPanel(User user) {
+        this.userController = new UserController();
+        this.user = user;
         setLayout(new FlowLayout(FlowLayout.LEFT));
 
         buildUI();
     }
 
     private void buildUI() {
-        ImageIcon profileIcon = new ImageIcon("src/main/resources/img/storage/profile/" + imageOwner + ".png");
+        UserProfileData userProfileData = userController.getUserProfileData(user.getUsername());
+        ImageIcon profileIcon = new ImageIcon(userProfileData.profile_pic());
         profileIcon.setImage(profileIcon.getImage().getScaledInstance(30, 30, Image.SCALE_SMOOTH));
         JLabel scaledIcon = new JLabel(profileIcon);
         add(scaledIcon); // Add profile icon
 
-        JLabel userName = new JLabel(imageOwner);
+        JLabel userName = new JLabel(user.getUsername());
         userName.setFont(new Font("Arial", Font.BOLD, 18));
         add(userName); // Add usernameLabel
 
@@ -34,7 +40,7 @@ public class UserNavPanel extends JPanel {
             @Override
             public void mouseClicked(MouseEvent e) {
                 JFrame currFrame = (JFrame) SwingUtilities.getWindowAncestor(UserNavPanel.this);
-                NavigationController.getInstance().navigate(currFrame, new ProfileUI(imageOwner)); // Call a method to switch to the image view
+                NavigationController.getInstance().navigate(currFrame, new ProfileUI(user));
             }
         });
 

@@ -8,37 +8,67 @@ import java.util.ArrayList;
 import java.util.List;
 
 public class UserDAO {
+    public UserDAO() {}
 
-    public UserDAO(){}
-
-    public User insertUser(User user) {
-        String sql = "INSERT INTO users (username, password_hash, bio, profile_picture_url) VALUES (?, ?, ?, ?)";
-
+    public void updateUser(User user) throws SQLException {
+        String sql = "UPDATE users SET bio = ?, profile_picture_url = ? WHERE username = ?";
         try (Connection conn = Database.getConnection();
-             PreparedStatement statement = conn.prepareStatement(sql)) {
-
-            statement.setString(1, user.username());
-            statement.setString(2, user.passwordHash());
-            statement.setString(3, user.bio());
-            statement.setString(4, user.profilePictureURL());
-
-            statement.executeUpdate();
-        } catch (SQLException e) {
-            throw new RuntimeException(e);
+                PreparedStatement stmt = conn.prepareStatement(sql)) {
+            stmt.setString(1, user.getBio());
+            stmt.setString(2, user.getProfilePictureURL());
         }
-
-        return user;
     }
 
-    public User findUserByUsername(String username) {
-        String sql = "SELECT * FROM users WHERE username = ?";
+    public boolean registerUser(User user) throws SQLException {
+        String sql = "INSERT INTO users (username, password_hash, bio, profile_picture_url) VALUES (?, SHA2(?, 256), ?, ?)";
+        try (Connection conn = Database.getConnection()){
+            PreparedStatement stmt = conn.prepareStatement(sql);
+            stmt.setString(1, user.getUsername());
+            stmt.setString(2, user.getPasswordHash());
+            stmt.setString(3, user.getBio());
+            stmt.setString(4, user.getProfilePictureURL());
+            return stmt.executeUpdate() == 1;
+        }catch (SQLException e) {
+            throw new SQLException(e);
+        }
+    }
+
+    public User validateLogin(String username, String plainPassword) throws SQLException {
+        String sql = "SELECT * FROM users WHERE username = ? AND password_hash = SHA2(?, 256)";
         try (Connection conn = Database.getConnection();
-             PreparedStatement statement = conn.prepareStatement(sql)) {
-            statement.setString(1, username);
-            try (ResultSet resultSet = statement.executeQuery()) {
-                if (resultSet.next()) {
-                    return extractUserFromResultSet(resultSet);
-                }
+             PreparedStatement stmt = conn.prepareStatement(sql)) {
+
+            stmt.setString(1, username);
+            stmt.setString(2, plainPassword);
+
+            ResultSet rs = stmt.executeQuery();
+            if (rs.next()) {
+                return new User(
+                        rs.getString("username"),
+                        rs.getString("password_hash"),
+                        rs.getString("bio"),
+                        rs.getString("profile_picture_url")
+                );
+            }
+        }
+        return null;
+    }
+
+
+
+    public User findByUsername(String username){
+        String sql = "SELECT * FROM users WHERE username = ?";
+        try (Connection conn = Database.getConnection()){
+            PreparedStatement stmt = conn.prepareStatement(sql);
+            stmt.setString(1, username);
+            ResultSet rs = stmt.executeQuery();
+            if (rs.next()) {
+                return new User(
+                        rs.getString("username"),
+                        rs.getString("password_hash"),
+                        rs.getString("bio"),
+                        rs.getString("profile_picture_url")
+                );
             }
         } catch (SQLException e) {
             throw new RuntimeException(e);
@@ -46,69 +76,25 @@ public class UserDAO {
         return null;
     }
 
-    public List<User> getAllUsers() {
+    public List<User> getFilteredUsers(String filter){
         List<User> users = new ArrayList<>();
-        String sql = "SELECT * FROM users";
-        try (Connection conn = Database.getConnection();
-             PreparedStatement statement = conn.prepareStatement(sql);
-             ResultSet resultSet = statement.executeQuery()) {
-            while (resultSet.next()) {
-                users.add(extractUserFromResultSet(resultSet));
+        String sql = "SELECT * FROM users WHERE username LIKE ?";
+        try (Connection conn = Database.getConnection()){
+            PreparedStatement stmt = conn.prepareStatement(sql);
+            stmt.setString(1, filter);
+            ResultSet rs = stmt.executeQuery();
+            if (rs.next()) {
+                User newUser = new User(
+                        rs.getString("username"),
+                        rs.getString("password_hash"),
+                        rs.getString("bio"),
+                        rs.getString("profile_picture_url")
+                );
+                users.add(newUser);
             }
         } catch (SQLException e) {
             throw new RuntimeException(e);
         }
         return users;
-    }
-
-    public void updateUserBio(String username, String newBio) {
-        String sql = "UPDATE users SET bio = ? WHERE username = ?";
-        try (Connection conn = Database.getConnection();
-             PreparedStatement statement = conn.prepareStatement(sql)) {
-            statement.setString(1, newBio);
-            statement.setString(2, username);
-            statement.executeUpdate();
-        } catch (SQLException e) {
-            throw new RuntimeException(e);
-        }
-    }
-
-    public void updateUserDetails(User user) {
-        String sql = "UPDATE users SET bio = ?, profile_picture_url = ? WHERE username = ?";
-        try (Connection conn = Database.getConnection();
-             PreparedStatement statement = conn.prepareStatement(sql)) {
-            statement.setString(1, user.bio());
-            statement.setString(2, user.profilePictureURL());
-            statement.setInt(3, user.userID());
-            statement.executeUpdate();
-        } catch (SQLException e) {
-            throw new RuntimeException(e);
-        }
-    }
-
-    private User extractUserFromResultSet(ResultSet resultSet) throws SQLException {
-        int userId = resultSet.getInt("user_id");
-        String username = resultSet.getString("username");
-        String passwordHash = resultSet.getString("password_hash");
-        String bio = resultSet.getString("bio");
-        String profilePictureUrl = resultSet.getString("profile_picture_url");
-        return new User(userId, username, passwordHash, bio, profilePictureUrl);
-    }
-
-    public List<User> findUsersByUsernameContaining(String query) {
-        String sql = "SELECT * FROM users WHERE username LIKE ?";
-        try (Connection conn = Database.getConnection();
-             PreparedStatement statement = conn.prepareStatement(sql)) {
-            statement.setString(1, "%" + query + "%");
-            try (ResultSet resultSet = statement.executeQuery()) {
-                List<User> users = new ArrayList<>();
-                while (resultSet.next()) {
-                    users.add(extractUserFromResultSet(resultSet));
-                }
-                return users;
-            }
-        } catch (SQLException e) {
-            throw new RuntimeException(e);
-        }
     }
 }

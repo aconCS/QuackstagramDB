@@ -1,6 +1,9 @@
 package group70.quackstagram.view.coreUI;
 
+import group70.quackstagram.Session;
 import group70.quackstagram.controller.*;
+import group70.quackstagram.model.Post;
+import group70.quackstagram.model.User;
 import group70.quackstagram.services.FileServices;
 import group70.quackstagram.view.components.*;
 
@@ -15,6 +18,7 @@ import java.io.*;
 import java.nio.file.Files;
 import java.nio.file.Paths;
 import java.util.ArrayList;
+import java.util.List;
 
 public class HomeUI extends UIBase {
     private final int width = this.getWidth();
@@ -24,11 +28,13 @@ public class HomeUI extends UIBase {
 
     private final JPanel homePanel;
     private final UserController userController;
+    private final PostController postController;
 
     public HomeUI() {
         setTitle("Quakstagram Home");
 
         userController = new UserController();
+        postController = new PostController();
         homePanel = new JPanel(new BorderLayout());
 
         buildUI();
@@ -44,8 +50,8 @@ public class HomeUI extends UIBase {
         contentPanel.setLayout(new BoxLayout(contentPanel, BoxLayout.Y_AXIS)); // Vertical box layout
         JScrollPane scrollPane = new JScrollPane(contentPanel);
         scrollPane.setHorizontalScrollBarPolicy(ScrollPaneConstants.HORIZONTAL_SCROLLBAR_NEVER); // Never allow horizontal scrolling
-        String[][] sampleData = createSampleData();
-        populateContentPanel(contentPanel, sampleData);
+        List<Post> filteredPosts = fetchPosts();
+        populateContentPanel(contentPanel, filteredPosts);
         add(scrollPane, BorderLayout.CENTER);
 
         // Set up the home panel
@@ -54,35 +60,32 @@ public class HomeUI extends UIBase {
         homePanel.add(scrollPane, BorderLayout.CENTER);
     }
 
-    private void populateContentPanel(JPanel panel, String[][] sampleData) {
+    private void populateContentPanel(JPanel panel, List<Post> filteredPosts) {
 
-        for (String[] postData: sampleData) {
+        for (Post post: filteredPosts) {
             JPanel itemPanel = new JPanel();
             itemPanel.setLayout(new BoxLayout(itemPanel, BoxLayout.Y_AXIS));
             itemPanel.setBackground(Color.WHITE); // Set the background color for the item panel
             itemPanel.setBorder(BorderFactory.createEmptyBorder(0, 5, 0, 5));
             itemPanel.setAlignmentX(CENTER_ALIGNMENT);
-            JLabel nameLabel = new JLabel(postData[0]);
+            JLabel nameLabel = new JLabel(post.getOwner());
             nameLabel.setAlignmentX(Component.LEFT_ALIGNMENT);
 
             JLabel imageLabel = new JLabel();
             imageLabel.setAlignmentX(Component.LEFT_ALIGNMENT);
             imageLabel.setPreferredSize(new Dimension(imageWidth, imageHeight));
             imageLabel.setBorder(BorderFactory.createLineBorder(Color.BLACK)); // Add border to image label
-            ImageIcon imageIcon = FileServices.createScaledIcon(postData[3], imageWidth, imageHeight);
+            ImageIcon imageIcon = FileServices.createScaledIcon(post.getPictureUrl(), imageWidth, imageHeight);
             if (imageIcon != null) {
                 imageLabel.setIcon(imageIcon);
             }else{
                 imageLabel.setText("Image not found");
             }
 
-            JLabel descriptionLabel = new JLabel(postData[1]);
+            JLabel descriptionLabel = new JLabel(post.getDescription());
             descriptionLabel.setAlignmentX(Component.LEFT_ALIGNMENT);
 
-            String imageId = new File(postData[3]).getName().split("\\.")[0];
-            PostController postController = new PostController(imageId);
-
-            JPanel likePanel = new LikeButton(postController);
+            JPanel likePanel = new LikeButton(post.getPostId());
 
             itemPanel.add(nameLabel);
             itemPanel.add(imageLabel);
@@ -96,7 +99,7 @@ public class HomeUI extends UIBase {
                 @Override
                 public void mouseClicked(MouseEvent e) {
                     JFrame currFrame = (JFrame) SwingUtilities.getWindowAncestor(imageLabel);
-                    NavigationController.getInstance().navigate(currFrame, new PostUI(postController)); // Call a method to switch to the image view
+                    NavigationController.getInstance().navigate(currFrame, new PostUI(post)); // Call a method to switch to the image view
                 }
             });
 
@@ -108,52 +111,20 @@ public class HomeUI extends UIBase {
         }
     }
 
-    private String[][] createSampleData() {
-        String currentUser = userController.getLoggedInUsername();
+    private List<Post> fetchPosts() {
+        User loggedInUser = Session.getInstance().getCurrentUser();
+        FollowController followController = new FollowController();
+        List<User> followedUsers = followController.getFollowing(loggedInUser.getUsername());
+        ArrayList<Post> filteredPosts = new ArrayList<>();
 
-        ArrayList<String> followedUsers = new ArrayList<>();
-        try (BufferedReader reader = Files.newBufferedReader(Paths.get("src/main/resources/data", "following.txt"))) {
-            String line;
-            while ((line = reader.readLine()) != null) {
-                if (line.startsWith(currentUser + ":")) {
-                    followedUsers.add(line.split(":")[1].trim());
-                }
-            }
-        } catch (IOException e) {
-            e.printStackTrace();
+        for(User user: followedUsers) {
+            List<Post> userPosts = postController.getFilteredPosts(user.getUsername(), true);
+            filteredPosts.addAll(userPosts);
         }
 
-        // Temporary structure to hold the data
-        String[][] tempData = new String[100][]; // Assuming a maximum of 100 posts for simplicity
-        int count = 0;
-
-        try (BufferedReader reader = Files.newBufferedReader(Paths.get("src/main/resources/img", "image_details.txt"))) {
-            String line;
-            while ((line = reader.readLine()) != null && count < tempData.length) {
-                String[] details = line.split(", ");
-                String imagePoster = details[1].split(": ")[1];
-                if (followedUsers.contains(imagePoster)) {
-                    String imagePath = new PostController(imagePoster).getImagePath();
-                    String description = details[2].split(": ")[1];
-                    String likes = "Likes: " + details[4].split(": ")[1];
-
-                    tempData[count++] = new String[] {
-                            imagePoster,
-                            description,
-                            likes,
-                            imagePath
-                    };
-                }
-            }
-        } catch (IOException e) {
-            e.printStackTrace();
-        }
-
-        // Transfer the data to the final array
-        String[][] sampleData = new String[count][];
-        System.arraycopy(tempData, 0, sampleData, 0, count);
-
-        return sampleData;
+        return filteredPosts;
     }
+
+
 
 }

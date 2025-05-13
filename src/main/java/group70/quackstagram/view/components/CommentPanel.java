@@ -1,7 +1,13 @@
 package group70.quackstagram.view.components;
 
 import group70.quackstagram.controller.PostController;
+import group70.quackstagram.controller.UserController;
+import group70.quackstagram.model.Comment;
+import group70.quackstagram.model.Post;
+import group70.quackstagram.model.User;
+import group70.quackstagram.model.UserProfileData;
 import group70.quackstagram.services.FileServices;
+import group70.quackstagram.utils.TimeStampFormatter;
 
 import javax.swing.*;
 import java.awt.*;
@@ -9,11 +15,14 @@ import java.util.ArrayList;
 
 public class CommentPanel extends JPanel{
 
+    private final Post post;
+    private final UserController userController;
     private final PostController postController;
 
-    public CommentPanel(PostController postController) {
-        this.postController = postController;
-
+    public CommentPanel(Post post) {
+        this.post = post;
+        this.userController = new UserController();
+        this.postController = new PostController();
         setLayout(new BorderLayout());
         buildCommentsPanel();
     }
@@ -30,25 +39,23 @@ public class CommentPanel extends JPanel{
         commentsPanel.setLayout(new BoxLayout(commentsPanel, BoxLayout.Y_AXIS));
 
         // Read comments from the file
-        ArrayList<String[]> comments = postController.getCommentsForPost();
+        java.util.List<Comment> comments = postController.getComments(post.getPostId());
 
-        for(String[] comment: comments){
+        for(Comment comment: comments){
             // Individual comment Panel
             JPanel commentPanel = new JPanel();
             commentPanel.setLayout(new BorderLayout(5,5));
             commentPanel.setBorder(BorderFactory.createEmptyBorder(5, 5, 5, 5));
             commentPanel.setAlignmentX(Component.LEFT_ALIGNMENT);
 
-            ImageIcon profileIcon = new ImageIcon("src/main/resources/img/storage/profile/" + comment[0] + ".png");
+            UserProfileData commenterData = userController.getUserProfileData(post.getOwner());
+            ImageIcon profileIcon = new ImageIcon(commenterData.profile_pic());
             profileIcon.setImage(profileIcon.getImage().getScaledInstance(30, 30, Image.SCALE_SMOOTH));
             JLabel scaledIcon = new JLabel(profileIcon);
 
-            String timestampMessage = FileServices.getElapsedTimestamp(comment[2]);
-            if(!timestampMessage.equals("Just now")) {
-                timestampMessage = FileServices.getElapsedTimestamp(comment[2]) + " ago";
-            }
+            String timestampMessage = TimeStampFormatter.getElapsedTimestamp(comment.getCommentDate());
 
-            JLabel commentLabel = new JLabel(comment[0] + ": " + comment[1]);
+            JLabel commentLabel = new JLabel(comment.getOwner() + ": " + comment.getContent());
             JLabel timeStampLabel = new JLabel(timestampMessage);
             timeStampLabel.setAlignmentX(Component.RIGHT_ALIGNMENT);
             timeStampLabel.setFont(new Font("Arial", Font.ITALIC, 12));

@@ -1,5 +1,6 @@
 package group70.quackstagram.view.components;
 
+import group70.quackstagram.Session;
 import group70.quackstagram.controller.NavigationController;
 import group70.quackstagram.view.authenticationUI.SignInUI;
 
@@ -28,6 +29,7 @@ public class UIBase extends JFrame {
     }
 
     public void onExit(){
+        Session.getInstance().logout();
         NavigationController.getInstance().navigate(this, new SignInUI());
     }
 }

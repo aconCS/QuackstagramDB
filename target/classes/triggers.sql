@@ -21,7 +21,7 @@ CREATE PROCEDURE send_notification(
     IN msg TEXT
 )
 BEGIN
-    INSERT INTO notifications (notified_username, type, message, notifier_username, is_read, date)
+    INSERT INTO notifications (user_id, type, message, related_user_id, is_read, date)
     VALUES (to_user_id, notif_type, msg, from_user_id, FALSE, NOW());
 END$$
 DELIMITER ;
@@ -33,11 +33,11 @@ CREATE TRIGGER after_like_insert
     FOR EACH ROW
 BEGIN
     DECLARE post_owner INT;
-    SELECT poster INTO post_owner FROM posts WHERE post_id = NEW.post_id;
+    SELECT user_id INTO post_owner FROM posts WHERE post_id = NEW.post_id;
 
-    IF post_owner IS NOT NULL AND post_owner != NEW.liker THEN
+    IF post_owner IS NOT NULL AND post_owner != NEW.user_id THEN
         CALL send_notification(post_owner,
-                               NEW.liker,
+                               NEW.user_id,
                                'like',
                                CONCAT('Your post got a like! Total likes: ',
                                       get_total_likes(NEW.post_id)));
@@ -52,11 +52,11 @@ CREATE TRIGGER after_comment_insert
     FOR EACH ROW
 BEGIN
     DECLARE post_owner INT;
-    SELECT poster INTO post_owner FROM posts WHERE post_id = NEW.post_id;
+    SELECT user_id INTO post_owner FROM posts WHERE post_id = NEW.post_id;
 
-    IF post_owner IS NOT NULL AND post_owner != NEW.commenter THEN
+    IF post_owner IS NOT NULL AND post_owner != NEW.user_id THEN
         CALL send_notification(post_owner,
-                               NEW.commenter,
+                               NEW.user_id,
                                'comment',
                                'Your post got a new comment!');
     END IF;

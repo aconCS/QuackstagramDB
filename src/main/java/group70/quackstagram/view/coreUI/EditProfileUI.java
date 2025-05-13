@@ -1,7 +1,10 @@
 package group70.quackstagram.view.coreUI;
 
+import group70.quackstagram.Session;
 import group70.quackstagram.controller.NavigationController;
 import group70.quackstagram.controller.UserController;
+import group70.quackstagram.model.User;
+import group70.quackstagram.model.UserProfileData;
 import group70.quackstagram.view.components.HeaderPanel;
 import group70.quackstagram.view.components.NavigationPanel;
 import group70.quackstagram.view.components.UIBase;
@@ -17,6 +20,7 @@ public class EditProfileUI extends UIBase {
 
     private static final int PROFILE_IMAGE_SIZE = 200;
     private final UserController userController;
+    private final User loggedInUser = Session.getInstance().getCurrentUser();
 
     /**
      * Constructor for EditProfileUI which creates the UI for editing the user's profile.
@@ -78,8 +82,7 @@ public class EditProfileUI extends UIBase {
         editPhotoLabel.setFont(new Font("Arial", Font.BOLD, 16));
 
         // Creates the logged-in user's profile picture
-        String username = userController.getLoggedInUsername();
-        ImageIcon profileIcon = new ImageIcon(new ImageIcon("resources/img/storage/profile/" + username + ".png").getImage().getScaledInstance(PROFILE_IMAGE_SIZE, PROFILE_IMAGE_SIZE, Image.SCALE_SMOOTH));
+        ImageIcon profileIcon = new ImageIcon(new ImageIcon(loggedInUser.getProfilePictureURL()).getImage().getScaledInstance(PROFILE_IMAGE_SIZE, PROFILE_IMAGE_SIZE, Image.SCALE_SMOOTH));
         JLabel profileImage = new JLabel(profileIcon);
         profileImage.setBorder(BorderFactory.createEmptyBorder(10, 10, 10, 10));
 
@@ -87,8 +90,8 @@ public class EditProfileUI extends UIBase {
         profileImage.addMouseListener(new MouseAdapter() {
             @Override
             public void mouseClicked(MouseEvent e) {
-                userController.changeProfilePicture();
-                NavigationController.getInstance().navigate(EditProfileUI.this, new ProfileUI(username));
+                userController.changeProfilePicture(loggedInUser);
+                NavigationController.getInstance().navigate(EditProfileUI.this, new ProfileUI(loggedInUser));
             }
         });
 
@@ -140,9 +143,8 @@ public class EditProfileUI extends UIBase {
         bioField.addActionListener(new ActionListener() {
             @Override
             public void actionPerformed(ActionEvent ae) {
-                String username = userController.getLoggedInUsername();
-                userController.editBio(bioField.getText());
-                NavigationController.getInstance().navigate(EditProfileUI.this, new ProfileUI(username));
+                userController.editBio(loggedInUser, bioField.getText());
+                NavigationController.getInstance().navigate(EditProfileUI.this, new ProfileUI(loggedInUser));
             }
         });
         return bioField;

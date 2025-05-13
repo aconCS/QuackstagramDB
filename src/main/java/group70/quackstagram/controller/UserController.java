@@ -1,78 +1,48 @@
 package group70.quackstagram.controller;
 
-import group70.quackstagram.model.Post;
 import group70.quackstagram.model.User;
+import group70.quackstagram.model.UserProfileData;
+import group70.quackstagram.services.FileServices;
 import group70.quackstagram.services.UserServices;
 
 import java.util.List;
 
+
 public class UserController {
     private final UserServices userServices;
 
-    public UserController(UserServices userServices) {
-        this.userServices = userServices;
+    public UserController(){
+        this.userServices = new UserServices();
     }
 
-    public User getCurrentUser() {
-        return userServices.getCurrentUser();
+    public boolean register(String username, String passwordHash, String bio, String profilePictureURL){
+        return userServices.register(username, passwordHash, bio, profilePictureURL);
     }
 
-    public String getBio() {
-        return userServices.getCurrentUser().bio();
+    public User login(String username, String passwordHash){
+        return userServices.login(username, passwordHash);
     }
 
-    public void editBio(String newBio) {
-        userServices.updateUserBio(newBio);
+    public UserProfileData getUserProfileData(String username){
+        return userServices.getUserProfileData(username);
     }
 
-    public String getProfilePictureURL() {
-        return userServices.getCurrentUser().profilePictureURL();
+    public void changeProfilePicture(User user){
+        String pictureURL = FileServices.fileChooser("Choose profile picture", "png", "jpg");
+        user.setProfilePictureURL(pictureURL);
+        userServices.updateUser(user);
     }
 
-    public void updateProfilePicture(String newURL) {
-        userServices.updateProfilePicture(newURL);
+    public void editBio(User user, String bio){
+        user.setBio(bio);
+        userServices.updateUser(user);
     }
 
-    public int getPostCount() {
-        return userServices.getPostCount();
+    public List<User> getFilteredUsers(String filter){
+        return userServices.getFilteredUsers(filter);
     }
 
-    public List<Post> getUserPosts() {
-        return userServices.getUserPosts();
-    }
-
-    public int getFollowersCount() {
-        return userServices.getFollowers().size();
-    }
-
-    public int getFollowingCount() {
-        return userServices.getFollowing().size();
-    }
-
-    // Get the list of followers
-    public List<User> getFollowers() {
-        return userServices.getFollowers();
-    }
-
-    // Get the list of users this user is following
-    public List<User> getFollowing() {
-        return userServices.getFollowing();
-    }
-
-    public boolean isFollowing(String targetUsername) {
-        return userServices.isFollowing(targetUsername);
-    }
-
-    public void followUser(String targetUsername) {
-        userServices.followUser(targetUsername);
-    }
-
-    public void unfollowUser(String targetUsername) {
-        userServices.unfollowUser(targetUsername);
-    }
-
-    // Search for users by username (partial match)
-    public List<User> searchUsers(String query) {
-        return userServices.searchUsers(query);
+    public User getUser(String username){
+        return userServices.findUserByName(username);
     }
 }

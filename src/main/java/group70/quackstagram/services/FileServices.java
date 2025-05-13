@@ -7,6 +7,7 @@ import java.awt.*;
 import java.awt.image.BufferedImage;
 import java.io.File;
 import java.io.IOException;
+import java.io.InputStream;
 import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
 import java.time.temporal.ChronoUnit;
@@ -14,7 +15,7 @@ import java.util.ArrayList;
 
 public class FileServices {
 
-    public static File openFileChooser(String dialogTitle, String... extensions) {
+    public static String fileChooser(String dialogTitle, String... extensions) {
         JFileChooser fileChooser = new JFileChooser();
         fileChooser.setDialogTitle(dialogTitle);
         fileChooser.setAcceptAllFileFilterUsed(false);
@@ -23,45 +24,9 @@ public class FileServices {
 
         int returnValue = fileChooser.showOpenDialog(null);
         if (returnValue == JFileChooser.APPROVE_OPTION) {
-            return fileChooser.getSelectedFile();
+            return fileChooser.getSelectedFile().getPath();
         }
         return null;
-    }
-
-    public static String getElapsedTimestamp(String timestamp) {
-        DateTimeFormatter formatter = DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss");
-        LocalDateTime timeOfNotification = LocalDateTime.parse(timestamp, formatter);
-        LocalDateTime currentTime = LocalDateTime.now();
-
-        long daysBetween = ChronoUnit.DAYS.between(timeOfNotification, currentTime);
-        long hoursBetween = ChronoUnit.HOURS.between(timeOfNotification, currentTime) % 24;
-        long minutesBetween = ChronoUnit.MINUTES.between(timeOfNotification, currentTime) % 60;
-
-        if (daysBetween == 0 && hoursBetween == 0 && minutesBetween == 0) {
-            return "Just now";
-        }
-
-        StringBuilder timeElapsed = new StringBuilder();
-
-        if (daysBetween > 0) {
-            timeElapsed.append(daysBetween).append(" day").append(daysBetween > 1 ? "s" : "");
-        }
-
-        if (hoursBetween > 0) {
-            if (!timeElapsed.isEmpty()) {
-                timeElapsed.append(", ");
-            }
-            timeElapsed.append(hoursBetween).append(" hour").append(hoursBetween > 1 ? "s" : "");
-        }
-
-        if (minutesBetween > 0) {
-            if (!timeElapsed.isEmpty()) {
-                timeElapsed.append(" and ");
-            }
-            timeElapsed.append(minutesBetween).append(" minute").append(minutesBetween > 1 ? "s" : "");
-        }
-
-        return timeElapsed.toString();
     }
 
     public static ImageIcon createScaledIcon(String path, int width, int height) {
@@ -88,18 +53,7 @@ public class FileServices {
         return imageIcon;
     }
 
-    public static ArrayList<String> getAllImageIds() {
-        ArrayList<String> imageIDs = new ArrayList<>();
-        File folder = new File("src/main/img/uploaded/");
-        if (folder.exists() && folder.isDirectory()) {
-            File[] files = folder.listFiles((dir, name) -> name.endsWith(".png"));
-            if (files != null) {
-                for (File file : files) {
-                    String fileName = file.getName();
-                    imageIDs.add(fileName.split("\\.")[0]);
-                }
-            }
-        }
-        return imageIDs;
+    public static String getFileExtension(File selectedFile) {
+        return selectedFile.getName().substring(selectedFile.getName().lastIndexOf(".") + 1);
     }
 }

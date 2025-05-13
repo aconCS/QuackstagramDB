@@ -1,60 +1,77 @@
 package group70.quackstagram.view.components;
 
+import group70.quackstagram.Session;
+import group70.quackstagram.controller.FollowController;
 import group70.quackstagram.controller.NavigationController;
 import group70.quackstagram.controller.UserController;
+import group70.quackstagram.model.User;
+import group70.quackstagram.model.UserProfileData;
+import group70.quackstagram.services.FileServices;
 import group70.quackstagram.view.coreUI.EditProfileUI;
+import org.w3c.dom.ls.LSOutput;
 
 import javax.swing.*;
 import java.awt.*;
+import java.io.InputStream;
+import java.net.URL;
 
 public class ProfileHeader extends JPanel {
     private static final int PROFILE_IMAGE_SIZE = 80;
-    private final String username;
-    private final UserController userController;
     private JPanel statsPanel;
+    private JPanel statsFollowPanel;
     private JTextArea profileBio;
+    private JButton profileButton;
+
+    private final UserController userController;
+    private final FollowController followController;
+
+    private final String username;
+    private final String loggedInUsername = Session.getInstance().getCurrentUser().getUsername();
 
     public ProfileHeader(String username, UserController userController) {
         this.username = username;
         this.userController = userController;
+        this.followController = new FollowController();
         setLayout(new BoxLayout(this, BoxLayout.Y_AXIS));
         setBackground(Color.GRAY);
         buildHeaderPanel();
     }
 
     public void refresh() {
-        int postCount = userController.getPostCount();
-        int followerCount = userController.getFollowersCount();
-        int followingCount = userController.getFollowingCount();
+        UserProfileData userProfileData = userController.getUserProfileData(username);
+
 
         statsPanel.removeAll();
-        statsPanel.add(createStatLabel(Integer.toString(postCount), "Posts"));
-        statsPanel.add(createStatLabel(Integer.toString(followerCount), "Followers"));
-        statsPanel.add(createStatLabel(Integer.toString(followingCount), "Following"));
+        statsPanel.add(createStatLabel(Integer.toString(userProfileData.postCount()), "Posts"));
+        statsPanel.add(createStatLabel(Integer.toString(userProfileData.followerCount()), "Followers"));
+        statsPanel.add(createStatLabel(Integer.toString(userProfileData.followingCount()), "Following"));
+        profileBio.setText(userProfileData.bio());
         statsPanel.revalidate();
         statsPanel.repaint();
 
-        profileBio.setText(userController.getBio());
+        statsFollowPanel.remove(profileButton);
+        profileButton = createProfileButton();
+        statsFollowPanel.add(profileButton);
+        statsFollowPanel.revalidate();
+        statsFollowPanel.repaint();
 
         revalidate();
         repaint();
     }
 
+
+
     private void buildHeaderPanel() {
-        String loggedInUsername = userController.getCurrentUser().username();
-        boolean isCurrentUser = loggedInUsername.equals(username);
+        UserProfileData userProfileData = userController.getUserProfileData(username);
 
         // Top Part of the Header (Profile Image, Stats, Follow Button)
         JPanel topHeaderPanel = new JPanel(new BorderLayout(10, 0));
         topHeaderPanel.setBackground(new Color(249, 249, 249));
 
         // Profile image
-        String profilePicPath = userController.getProfilePictureURL();
-        ImageIcon profileIcon = new ImageIcon(
-                new ImageIcon(profilePicPath)
-                        .getImage()
-                        .getScaledInstance(PROFILE_IMAGE_SIZE, PROFILE_IMAGE_SIZE, Image.SCALE_SMOOTH)
-        );
+        String profilePicPath = userProfileData.profile_pic();
+        ImageIcon profileIcon = FileServices.createScaledIcon(profilePicPath, PROFILE_IMAGE_SIZE, PROFILE_IMAGE_SIZE);
+
         JLabel profileImage = new JLabel(profileIcon);
         profileImage.setBorder(BorderFactory.createEmptyBorder(10, 10, 10, 10));
         topHeaderPanel.add(profileImage, BorderLayout.WEST);
@@ -63,16 +80,16 @@ public class ProfileHeader extends JPanel {
         statsPanel = new JPanel();
         statsPanel.setLayout(new FlowLayout(FlowLayout.CENTER, 10, 0));
         statsPanel.setBackground(new Color(249, 249, 249));
-        statsPanel.add(createStatLabel(Integer.toString(userController.getPostCount()), "Posts"));
-        statsPanel.add(createStatLabel(Integer.toString(userController.getFollowersCount()), "Followers"));
-        statsPanel.add(createStatLabel(Integer.toString(userController.getFollowingCount()), "Following"));
+        statsPanel.add(createStatLabel(Integer.toString(userProfileData.postCount()), "Posts"));
+        statsPanel.add(createStatLabel(Integer.toString(userProfileData.followerCount()), "Followers"));
+        statsPanel.add(createStatLabel(Integer.toString(userProfileData.followingCount()), "Following"));
         statsPanel.setBorder(BorderFactory.createEmptyBorder(25, 0, 10, 0));
 
         // Profile Button (Edit or Follow/Unfollow)
-        JButton profileButton = createProfileButton(isCurrentUser, loggedInUsername);
+        profileButton = createProfileButton();
 
         // Combine stats and button
-        JPanel statsFollowPanel = new JPanel();
+        statsFollowPanel = new JPanel();
         statsFollowPanel.setLayout(new BoxLayout(statsFollowPanel, BoxLayout.Y_AXIS));
         statsFollowPanel.add(statsPanel);
         statsFollowPanel.add(profileButton);
@@ -87,7 +104,7 @@ public class ProfileHeader extends JPanel {
         profileNameLabel.setFont(new Font("Arial", Font.BOLD, 14));
         profileNameLabel.setBorder(BorderFactory.createEmptyBorder(10, 10, 0, 10));
 
-        profileBio = new JTextArea(userController.getBio());
+        profileBio = new JTextArea(userProfileData.bio());
         profileBio.setEditable(false);
         profileBio.setFont(new Font("Arial", Font.PLAIN, 12));
         profileBio.setBackground(new Color(249, 249, 249));
@@ -107,19 +124,21 @@ public class ProfileHeader extends JPanel {
         return label;
     }
 
-    private JButton createProfileButton(boolean isCurrentUser, String loggedInUsername) {
+    private JButton createProfileButton() {
+        boolean isCurrentUser = loggedInUsername.equals(username);
         JButton profileButton = new JButton("null");
-
         if (!isCurrentUser) {
-            String buttonText = userController.isFollowing(username) ? "Unfollow" : "Follow";
+            boolean isFollowing = followController.isFollowing(username, loggedInUsername);
+            System.out.println(isFollowing);
+            String buttonText = isFollowing ? "Unfollow" : "Follow";
             profileButton.setText(buttonText);
             profileButton.addActionListener(e -> {
-                if(userController.isFollowing(username)){
-                    userController.unfollowUser(username);
+                if(isFollowing) {
+                    followController.unfollow(loggedInUsername, username);
                     profileButton.setText("Follow");
                     refresh();
                 } else {
-                    userController.followUser(username);
+                    followController.follow(loggedInUsername, username);
                     profileButton.setText("Unfollow");
                     refresh();
                 }

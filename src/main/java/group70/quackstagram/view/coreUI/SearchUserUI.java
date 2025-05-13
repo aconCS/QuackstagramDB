@@ -1,11 +1,13 @@
 package group70.quackstagram.view.coreUI;
 
 import group70.quackstagram.controller.UserController;
+import group70.quackstagram.model.User;
 import group70.quackstagram.view.components.*;
 
 import javax.swing.*;
 import java.awt.*;
 import java.util.ArrayList;
+import java.util.List;
 
 public class SearchUserUI extends UIBase {
 
@@ -54,16 +56,10 @@ public class SearchUserUI extends UIBase {
         bodyPanel.setLayout(new BoxLayout(bodyPanel, BoxLayout.PAGE_AXIS));
 
         // Initializes a string of all usernames
-        ArrayList<String> users = userController.getAllUsers();
+        List<User> filteredUsers = userController.getFilteredUsers(filter);
 
-        // Iterates over the list of users and filters them based on the provided filter string.
-        // For each user that matches the filter, a UserNavPanel is then created and added to the
-        // bodyPanel. The UserNavPanel allows the logged-in user to navigate to the selected user's
-        // profile when clicked.
-        for (String user : users) {
-            if (user.toLowerCase().contains(filter.toLowerCase())) {
-                bodyPanel.add(new UserNavPanel(user));
-            }
+        for (User user : filteredUsers) {
+            bodyPanel.add(new UserNavPanel(user));
         }
 
         return bodyPanel;

@@ -1,21 +1,24 @@
 package group70.quackstagram.view.coreUI;
 
+import group70.quackstagram.Session;
+import group70.quackstagram.controller.NotificationController;
 import group70.quackstagram.controller.UserController;
-import group70.quackstagram.services.FileServices;
+import group70.quackstagram.model.Notification;
+import group70.quackstagram.model.User;
+import group70.quackstagram.model.UserProfileData;
+import group70.quackstagram.utils.TimeStampFormatter;
 import group70.quackstagram.view.components.HeaderPanel;
 import group70.quackstagram.view.components.NavigationPanel;
 import group70.quackstagram.view.components.UIBase;
 
 import javax.swing.*;
 import java.awt.*;
-import java.io.BufferedReader;
-import java.io.IOException;
-import java.nio.file.Files;
-import java.nio.file.Paths;
+import java.util.List;
 
 public class NotificationsUI extends UIBase {
 
     private final UserController userController;
+    private final NotificationController notificationController;
 
     /**
      * Constructor for NotificationsUI.
@@ -27,6 +30,7 @@ public class NotificationsUI extends UIBase {
     public NotificationsUI() {
         setTitle("Notifications");
         this.userController = new UserController();
+        this.notificationController = new NotificationController();
         buildUI();
     }
 
@@ -48,58 +52,33 @@ public class NotificationsUI extends UIBase {
         scrollPane.setHorizontalScrollBarPolicy(JScrollPane.HORIZONTAL_SCROLLBAR_NEVER);
         scrollPane.setVerticalScrollBarPolicy(JScrollPane.VERTICAL_SCROLLBAR_AS_NEEDED);
 
-        try (BufferedReader reader = Files.newBufferedReader(Paths.get("src/main/resources/data", "notifications.txt"))) {
-            String line;
-            while ((line = reader.readLine()) != null) {
-                String[] parts = line.split(";");
-                if (parts[0].trim().equals(userController.getLoggedInUsername())) {
-                    // Formats the notification message
-                    String userWhoInteracted = parts[1].trim();
-                    String imageId = parts[2].trim();
-                    String timestamp = parts[3].trim();
-                    String type = parts[4].trim();
+        User currentUser = Session.getInstance().getCurrentUser();
+        List<Notification> notificationList = notificationController.getNotifications(currentUser.getUsername());
 
-                    String notificationMessage;
-                    switch (type) {
-                        case "like":
-                           notificationMessage = userWhoInteracted + " liked your post";
-                           break;
-                        case "comment":
-                            notificationMessage = userWhoInteracted + " commented on your post";
-                            break;
-                        default:
-                            notificationMessage = userWhoInteracted + " interacted with your post";
-                            break;
-                    }
 
-                    // Adds the notification to the panel
-                    JPanel notificationPanel = new JPanel(new BorderLayout());
-                    notificationPanel.setBorder(BorderFactory.createEmptyBorder(5, 10, 5, 10));
+        for (Notification notification : notificationList) {
+            // Adds the notification to the panel
+            JPanel notificationPanel = new JPanel(new BorderLayout());
+            notificationPanel.setBorder(BorderFactory.createEmptyBorder(5, 10, 5, 10));
 
-                    // Adds profile icon (if available) and timestamp
-                    ImageIcon profileIcon = new ImageIcon("src/main/resources/img/storage/profile/" + userWhoInteracted + ".png");
-                    profileIcon.setImage(profileIcon.getImage().getScaledInstance(30, 30, Image.SCALE_SMOOTH));
-                    JLabel scaledIcon = new JLabel(profileIcon);
+            // Adds profile icon (if available) and timestamp
+            UserProfileData userProfileData = userController.getUserProfileData(notification.getRelatedUserID());
+            ImageIcon profileIcon = new ImageIcon(userProfileData.profile_pic());
+            profileIcon.setImage(profileIcon.getImage().getScaledInstance(30, 30, Image.SCALE_SMOOTH));
+            JLabel scaledIcon = new JLabel(profileIcon);
 
-                    String timestampMessage = FileServices.getElapsedTimestamp(timestamp);
-                    if(!timestampMessage.equals("Just now")) {
-                        timestampMessage = FileServices.getElapsedTimestamp(timestamp) + " ago";
-                    }
+            String timestampMessage = TimeStampFormatter.getElapsedTimestamp(notification.getDate());
 
-                    JLabel timestampLabel = new JLabel(timestampMessage);
-                    timestampLabel.setFont(new Font("Arial", Font.PLAIN, 10));
-                    notificationPanel.add(scaledIcon, BorderLayout.WEST);
-                    notificationPanel.add(timestampLabel, BorderLayout.EAST);
+            JLabel timestampLabel = new JLabel(timestampMessage);
+            timestampLabel.setFont(new Font("Arial", Font.PLAIN, 10));
+            notificationPanel.add(scaledIcon, BorderLayout.WEST);
+            notificationPanel.add(timestampLabel, BorderLayout.EAST);
 
-                    JLabel notificationLabel = new JLabel(notificationMessage);
-                    notificationLabel.setFont(new Font("Arial", Font.BOLD, 12));
-                    notificationPanel.add(notificationLabel, BorderLayout.CENTER);
+            JLabel notificationLabel = new JLabel(notification.getMessage());
+            notificationLabel.setFont(new Font("Arial", Font.BOLD, 12));
+            notificationPanel.add(notificationLabel, BorderLayout.CENTER);
 
-                    contentPanel.add(notificationPanel);
-                }
-            }
-        } catch (IOException e) {
-            e.printStackTrace();
+            contentPanel.add(notificationPanel);
         }
         // Add panels to frame
         add(headerPanel, BorderLayout.NORTH);

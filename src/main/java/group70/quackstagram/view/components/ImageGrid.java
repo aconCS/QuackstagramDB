@@ -2,25 +2,27 @@ package group70.quackstagram.view.components;
 
 import group70.quackstagram.controller.NavigationController;
 import group70.quackstagram.controller.PostController;
+import group70.quackstagram.model.Post;
 import group70.quackstagram.services.FileServices;
 import group70.quackstagram.view.coreUI.PostUI;
 
 import javax.swing.*;
+import java.util.ArrayList;
 import java.awt.*;
 import java.awt.event.MouseAdapter;
 import java.awt.event.MouseEvent;
-import java.util.ArrayList;
 
 public class ImageGrid extends JPanel{
 
     private final int imageSize;
+    private final boolean exactMatch;
     private String filter;
-    private final boolean isExact;
 
-    public ImageGrid(String filter, int imageSize, boolean isExact) {
+
+    public ImageGrid(String filter, int imageSize, boolean exactMatch) {
         setLayout(new BorderLayout(5,5));
         this.imageSize = imageSize;
-        this.isExact = isExact;
+        this.exactMatch= exactMatch;
         this.filter = filter;
 
         initializeScrollGrid();
@@ -50,28 +52,27 @@ public class ImageGrid extends JPanel{
 
     private JPanel createGrid() {
         JPanel imageGrid = new JPanel(new GridLayout(0, 3, 2, 2));
-        ArrayList<String> imageIds = FileServices.getAllImageIds();
+        PostController postController = new PostController();
 
-        for(String imageId : imageIds){
-            String username = new PostController(imageId).getImageOwner();
-            if(isExact && !username.equals(filter)) continue;
-            if(!isExact && !username.toLowerCase().contains(filter.toLowerCase())) continue;
+        // Get filtered posts
+        java.util.List<Post> filteredPosts = postController.getFilteredPosts(filter, exactMatch);
 
-            PostController postController = new PostController(imageId);
-            String imagePath = postController.getImagePath();
+        for (Post post : filteredPosts) {
+            String imagePath = post.getPictureUrl();
             ImageIcon imageIcon = FileServices.createScaledIcon(imagePath, imageSize, imageSize);
 
             JLabel imageLabel = new JLabel(imageIcon);
             imageLabel.addMouseListener(new MouseAdapter() {
                 @Override
                 public void mouseClicked(MouseEvent e) {
-                    PostController postController = new PostController(imageId);
                     JFrame currFrame = (JFrame) SwingUtilities.getWindowAncestor(imageLabel);
-                    NavigationController.getInstance().navigate(currFrame, new PostUI(postController));
+                    NavigationController.getInstance().navigate(currFrame, new PostUI(post));
                 }
             });
+
             imageGrid.add(imageLabel);
         }
         return imageGrid;
     }
+
 }

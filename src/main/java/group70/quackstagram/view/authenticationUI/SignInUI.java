@@ -1,7 +1,9 @@
 package group70.quackstagram.view.authenticationUI;
 
-import group70.quackstagram.controller.AuthController;
+import group70.quackstagram.Session;
 import group70.quackstagram.controller.NavigationController;
+import group70.quackstagram.controller.UserController;
+import group70.quackstagram.model.User;
 import group70.quackstagram.view.components.UIBase;
 import group70.quackstagram.view.coreUI.HomeUI;
 
@@ -10,13 +12,13 @@ import java.awt.event.ActionEvent;
 
 public class SignInUI extends UIBase {
 
-    private final AuthController authController;
+    private final UserController userController;
     private final JTextField usernameField;
     private final JTextField passwordField;
 
     public SignInUI() {
         setTitle("Quackstagram - Sign in");
-        authController = new AuthController();
+        userController = new UserController();
         setDefaultCloseOperation(EXIT_ON_CLOSE);
 
         // Create fields to pass to AuthUIBuilder
@@ -34,7 +36,7 @@ public class SignInUI extends UIBase {
 
     /*
     * Event handler that triggers when the sign-in button is clicked.
-    * Creates a new User object with the entered username and password upon successful verification.
+    * Creates a new User object with the entered owner and password upon successful verification.
     * Navigates to the ProfileUI with the new User object.
     * */
     private void onSignInClicked(ActionEvent event) {
@@ -42,13 +44,14 @@ public class SignInUI extends UIBase {
         String enteredPassword = passwordField.getText();
 
         if(enteredUsername == null || enteredPassword == null){
-            JOptionPane.showMessageDialog(this, "Please enter a valid username/password");
+            JOptionPane.showMessageDialog(this, "Please enter a valid owner/password");
             return;
         }
 
         System.out.println(enteredUsername + " <-> " + enteredPassword);
-        if (authController.verifyCredentials(enteredUsername, enteredPassword)) {
+        if (userController.login(enteredUsername, enteredPassword) != null) {
             System.out.println("Valid Credentials");
+            Session.getInstance().login(userController.login(enteredUsername, enteredPassword));
             NavigationController.getInstance().navigate(this, new HomeUI());
         } else {
             JOptionPane.showMessageDialog(this, "Invalid credentials");

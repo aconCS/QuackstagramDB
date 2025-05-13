@@ -1,63 +1,93 @@
 package group70.quackstagram.services;
 
 import group70.quackstagram.controller.UserController;
-import group70.quackstagram.repository.PostRepository;
+import group70.quackstagram.dao.CommentDAO;
+import group70.quackstagram.dao.LikeDAO;
+import group70.quackstagram.dao.PostDAO;
+import group70.quackstagram.model.Comment;
+import group70.quackstagram.model.Like;
+import group70.quackstagram.model.Post;
 
 import java.io.IOException;
+import java.sql.SQLException;
 import java.util.ArrayList;
+import java.util.List;
 
 public class PostServices {
 
-    private final PostRepository postRepository;
+    private final PostDAO postDao;
+    private final CommentDAO commentDao;
+    private final LikeDAO likeDao;
 
     public PostServices() {
-        this.postRepository = new PostRepository();
+        this.likeDao = new LikeDAO();
+        this.postDao = new PostDAO();
+        this.commentDao = new CommentDAO();
     }
 
-    public void addCommentToPost(String imageId, String comment) {
-        postRepository.writeCommentToPost(imageId, comment);
+    public void createNewPost(Post post) {
+        try {
+            postDao.createPost(post);
+        } catch (SQLException e) {
+            throw new RuntimeException("Couldn't create post: ", e);
+        }
     }
 
-    public ArrayList<String[]> getCommentsForPost(String imageId) {
-        return postRepository.loadCommentsForPost(imageId);
+    public int getPostCount(String username) {
+        try {
+            return postDao.countPostsByUser(username);
+        } catch (SQLException e) {
+            throw new RuntimeException("Failed to count posts", e);
+        }
     }
 
-    public void  addLikeToPost(String imageId) {
-        postRepository.writeLikeToPost(imageId);
+    public List<Post> getFilteredPosts(String filter, boolean exactMatch) {
+        try {
+            return postDao.getFilteredPosts(filter, exactMatch);
+        } catch (SQLException e) {
+            throw new RuntimeException("Failed to filter posts", e);
+        }
     }
 
-    public int getLikesForPost(String imageId) {
-        return postRepository.loadLikesForPost(imageId);
-    }
-
-    public void removeLikeFromPost(String imageId) {
+    public void addComment(Comment comment) {
         try{
-            postRepository.deleteLikeFromPost(imageId);
-        }catch(IOException ex){
-            ex.printStackTrace();
+            commentDao.insertComment(comment);
+        }catch (SQLException e){
+            throw new RuntimeException("Failed to add comment", e);
+        }
+    }
+
+    public boolean isPostLiked(Like like) {
+        return likeDao.checkLike(like);
+    }
+
+    public void addLike(Like like) {
+        likeDao.insertLike(like);
+    }
+
+    public void removeLike(Like like) {
+        likeDao.removeLike(like);
+    }
+
+    public int getNextPostId(String username) {
+        try{
+            return postDao.getNextPostId(username);
+        }catch (SQLException e){
+            throw new RuntimeException("Failed to get next post id", e);
         }
 
     }
 
-    public boolean isPostLiked(String imageId) {
-        UserController userController = new UserController();
-        return postRepository.isAlreadyLiked(imageId, userController.getLoggedInUsername());
+    public List<Comment> getComments(int postId) {
+        try{
+            return commentDao.getCommentsForPost(postId);
+        }catch (SQLException e){
+            throw new RuntimeException("Failed to get next comments", e);
+        }
+
     }
 
-    public void setNotification(String imageId, String type){
-        postRepository.writeNotification(imageId, type);
-    }
-
-    public String getImageOwner(String imageId){
-        String[] parts = imageId.split("_");
-        return parts[0];
-    }
-
-    public String getImagePath(String imageId){
-        return postRepository.getImagePath(imageId);
-    }
-
-    public String getPostCaption(String imageId){
-        return postRepository.readPostCaption(imageId);
+    public Post getPost(int postId) {
+        return postDao.getPostById(postId);
     }
 }

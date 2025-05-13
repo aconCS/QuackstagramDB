@@ -1,42 +1,58 @@
 package group70.quackstagram.controller;
 
+import group70.quackstagram.model.Comment;
+import group70.quackstagram.model.Like;
+import group70.quackstagram.model.Post;
 import group70.quackstagram.services.PostServices;
 
-import java.util.ArrayList;
+import java.util.List;
 
 public class PostController {
 
-    private final PostServices postServices;
-    private final String imageId;
+    private final PostServices postService;
 
-    public PostController(String imageId){
-        this.postServices = new PostServices();
-        this.imageId = imageId;
+    public PostController() {
+        this.postService = new PostServices();
     }
 
-    public void addCommentToPost(String comment) {
-        postServices.addCommentToPost(imageId, comment);
-        postServices.setNotification(imageId, "comment");
+    public void createPost(Post post) {
+        postService.createNewPost(post);
     }
 
-    public ArrayList<String[]> getCommentsForPost() { return postServices.getCommentsForPost(imageId); }
+    public int getUserPostCount(String username) {
+        return postService.getPostCount(username);
+    }
 
-    public int getLikesForPost() { return postServices.getLikesForPost(imageId); }
+    public List<Post> getFilteredPosts(String filter, boolean exactMatch) {
+        return postService.getFilteredPosts(filter, exactMatch);
+    }
 
-    public void likeAction() {
-        if(postServices.isPostLiked(imageId)){
-            postServices.removeLikeFromPost(imageId);
-            postServices.setNotification(imageId, "like");
-        } else {
-            postServices.addLikeToPost(imageId);
+    public void addComment(Comment comment) {
+        postService.addComment(comment);
+    }
+
+    public boolean isPostLiked(Like like) {
+        return postService.isPostLiked(like);
+    }
+
+    public void likeAction(Like like) {
+        if (isPostLiked(like)){
+            postService.removeLike(like);
+        }else{
+            postService.addLike(like);
         }
     }
 
-    public String getImageOwner() { return postServices.getImageOwner(imageId); }
+    public int getNextPostId(String username) {
+        return postService.getNextPostId(username);
+    }
 
-    public boolean isPostLiked() { return postServices.isPostLiked(imageId); }
+    public List<Comment> getComments(int postId) {
+        return postService.getComments(postId);
+    }
 
-    public String getImagePath() { return postServices.getImagePath(imageId); }
-
-    public String getPostCaption() { return postServices.getPostCaption(imageId); }
+    public Post getPost(int postId) {
+        return postService.getPost(postId);
+    }
 }
+

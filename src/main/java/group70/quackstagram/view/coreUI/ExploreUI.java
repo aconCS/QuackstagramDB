@@ -82,7 +82,7 @@ public class ExploreUI extends UIBase {
         JPanel searchPanel = new JPanel();
         searchPanel.setLayout(new BoxLayout(searchPanel, BoxLayout.Y_AXIS));
 
-        // Creates the search field for posts belonging to a given username
+        // Creates the search field for posts belonging to a given owner
         JTextField searchPostField = new JTextField(" Search Posts");
         searchPanel.setMaximumSize(new Dimension(Integer.MAX_VALUE, searchPostField.getPreferredSize().height));
         searchPostField.addActionListener(e -> {

@@ -1,5 +1,6 @@
 package group70.quackstagram.view.components;
 
+import group70.quackstagram.Session;
 import group70.quackstagram.controller.NavigationController;
 import group70.quackstagram.controller.UserController;
 import group70.quackstagram.view.coreUI.*;
@@ -10,12 +11,9 @@ import java.awt.*;
 public class NavigationPanel extends JPanel {
 
     private static final int NAV_ICON_SIZE = 20; // Size for navigation icons
-    private final UserController userController;
     private final JFrame currFrame;
 
-    // TODO CHANGE
     public NavigationPanel(JFrame currFrame) {
-        this.userController = new UserController();
         this.currFrame = currFrame;
         buildNavigationPanel();
     }
@@ -68,11 +66,11 @@ public class NavigationPanel extends JPanel {
     }
 
     /*
-    * Reads the logged-in user's username from users.txt and navigates to the profile UI.
+    * Reads the logged-in user's owner from users.txt and navigates to the profile UI.
     * */
     private void openProfileUI() {
         // Navigate to profile UI
-        NavigationController.getInstance().navigate(currFrame, new ProfileUI(userController.getLoggedInUsername()));
+        NavigationController.getInstance().navigate(currFrame, new ProfileUI(Session.getInstance().getCurrentUser()));
     }
 
     private void openImageUploadUI() { NavigationController.getInstance().navigate(currFrame, new ImageUploadUI()); }

@@ -3,30 +3,47 @@ package group70.quackstagram.dao;
 import group70.quackstagram.database.Database;
 import group70.quackstagram.model.Notification;
 
-import java.sql.Connection;
-import java.sql.PreparedStatement;
-import java.sql.SQLException;
+import java.sql.*;
+import java.util.ArrayList;
+import java.util.List;
 
 public class NotificationDAO {
 
-    public void insertNotification(Notification notification) {
-        String sql = "INSERT INTO notifications " +
-                "(user_id, type, message_type, related_user_id, is_read, date) " +
-                "VALUES (?, ?, ?, ?, ?, ?)";
+    public List<Notification> getNotificationsForUser(String username) throws SQLException {
+        List<Notification> notifications = new ArrayList<>();
+        String sql = "SELECT * FROM notifications WHERE owner = ? AND is_read IS false ORDER BY date DESC";
 
-        try (Connection connection = Database.getConnection();
-             PreparedStatement statement = connection.prepareStatement(sql)) {
+        try (Connection conn = Database.getConnection();
+             PreparedStatement stmt = conn.prepareStatement(sql)) {
 
-            statement.setInt(1, notification.userID());
-            statement.setString(2, notification.messageType());
-            statement.setString(3, notification.message());
-            statement.setInt(4, notification.relatedUserID());
-            statement.setBoolean(5, notification.isRead());
-            statement.setDate(6, notification.date());
+            stmt.setString(1, username);
+            ResultSet rs = stmt.executeQuery();
 
-            statement.executeUpdate();
-        } catch (SQLException e) {
-            throw new RuntimeException(e);
+            while (rs.next()) {
+                Notification notification = new Notification(
+                        rs.getInt("notification_id"),
+                        rs.getString("username"),
+                        rs.getString("type"),
+                        rs.getString("message"),
+                        rs.getString("related_username"),
+                        false,
+                        rs.getTimestamp("created_at")
+                );
+                notifications.add(notification);
+            }
+        }
+
+        return notifications;
+    }
+
+    public void markAsRead(String username) throws SQLException {
+        String sql = "UPDATE notifications SET is_read = TRUE WHERE owner = ?";
+
+        try (Connection conn = Database.getConnection();
+             PreparedStatement stmt = conn.prepareStatement(sql)) {
+
+            stmt.setString(1, username);
+            stmt.executeUpdate();
         }
     }
 }
